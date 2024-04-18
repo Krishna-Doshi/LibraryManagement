@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Book List</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+            font-family: fantasy;
+        }
+        
+        thead {
+            background-color: bisque;
+        }
+
+        h2 {
+            text-align: center;
+            font-family: fantasy;
+        }
+
+        #findBook {
+            margin: 10px;
+            padding: 10px;
+            text-align: center;
+            font-family: fantasy;
+        }
+
+      
+        #findButtonContainer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px;
+        }
+
+       
+        #findButton ,#placeButton{
+            font-family: fantasy;
+            padding: 10px 20px;
+            background-color: blanchedalmond;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2> List Of Books</h2>
+
+     <div>
+    <table id="book-table">
+        <thead>
+            <tr>
+                <td>Id</td>
+                <td>Name</td>
+                <td>Type</td>
+                <td>Available</td>
+            </tr>
+        </thead>
+        <tbody id="book-table-body"></tbody>
+    </table>
+     </div>
+   
+     
+     <div id="findButtonContainer">
+         <button id="findButton" onclick="openPopup()">Find Book By Id</button>
+          <button id="placeButton" onclick="placePopup()">Place Order</button>
+     </div>
+
+    <script>
+
+        const bookTable = document.getElementById("book-table");
+        const bookTableBody = document.getElementById("book-table-body");
+
+        async function fetchData() {
+            try {
+                const response = await fetch('https://simple-books-api.glitch.me/books');
+                if (!response.ok) {
+                    throw new Error("Failed to fetch books");
+                }
+                const data = await response.json();
+                displayData(data);
+            } catch(error) {
+                console.error(error);
+            }
+        }
+        fetchData();
+
+        async function fetchBook(bookId) {
+            try {
+                if (!bookId) {
+                    bookId = document.getElementById("bookid").value;
+                }
+                const response = await fetch(`https://simple-books-api.glitch.me/books/${bookId}`);
+                if (!response.ok) {
+                   alert(`No book found with id ${bookId}`);
+                }
+                const data = await response.json();
+                displayData([data]); 
+            } catch(error) {
+                console.error(error);
+            }
+        }
+
+        function displayData(data) {
+            bookTableBody.innerHTML = ''; 
+
+            data.forEach(book => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${book.id}</td>
+                    <td>${book.name}</td>
+                    <td>${book.type}</td>
+                    <td>${book.available}</td>
+                `;
+                bookTableBody.appendChild(row);
+            });
+
+            
+            bookTable.style.display = "table";
+        }
+
+        function openPopup() {
+            const bookId = prompt("Enter book id:");
+            if (bookId !== null) {
+                fetchBook(bookId);
+            }
+        }
+
+        function placePopup(){
+            const bookid = prompt("Enter book id");
+            if(bookid!==null){
+                const customerName = prompt("Enter customer Name");
+                if(customerName !==null){
+                    placeOrders(bookid, customerName)
+                }
+            }
+        }
+
+         async function placeOrders(bookid, customerName){
+            try{
+             const token="d8ad6a6f93295b87caf2c6739260c37d8eec8a41ca49175c2be646a15d6630c8";
+            //  const bookid=document.getElementById("orderid").value;
+            //  const customerName= document.getElementById("cust-name").value;
+            const response = await fetch('https://simple-books-api.glitch.me/orders',{
+                method:'POST',
+                headers:{
+                'Authorization':`Bearer ${token}`,
+                 'Content-Type': 'application/json'
+                },
+                body:JSON.stringify({
+                    bookId:bookid,
+                    customerName:customerName
+                })
+            })
+            const data= await response.json();
+            console.log(data);
+             alert("Order placed successfully!");
+        }catch(error){
+            console.log(error);
+        }
+        }
+
+    </script>
+    
+</body>
+</html>
